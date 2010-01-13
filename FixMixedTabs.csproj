@@ -67,6 +67,14 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="fix-mixed-tabs-icon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="fix-mixed-tabs-screenshot.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="ms-pl.txt" />
   </ItemGroup>
   <ItemGroup>

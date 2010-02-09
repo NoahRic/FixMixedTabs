@@ -177,6 +177,7 @@ namespace FixMixedTabs
             ITrackingPoint anchor = _textView.TextSnapshot.CreateTrackingPoint(_textView.Selection.AnchorPoint.Position, PointTrackingMode.Positive);
             ITrackingPoint active = _textView.TextSnapshot.CreateTrackingPoint(_textView.Selection.ActivePoint.Position, PointTrackingMode.Positive);
             bool empty = _textView.Selection.IsEmpty;
+            TextSelectionMode mode = _textView.Selection.Mode;
 
             using (UndoTransaction undo = _undoHistory.CreateTransaction("Untabify"))
             {
@@ -186,22 +187,10 @@ namespace FixMixedTabs
 
                 ITextSnapshot after = _textView.TextSnapshot;
 
-#if PostBeta2 // After Beta 2, we don't need to do the selection/caret movement and view scroller call explicitly
-
-                // _operations.SelectAndMoveCaret(new VirtualSnapshotPoint(anchor.GetPoint(after)), new VirtualSnapshotPoint(active.GetPoint(after)));
-#endif
-                if (empty)
-                {
-                    _textView.Selection.Clear();
-                    _textView.Caret.MoveTo(active.GetPoint(after));
-                }
-                else
-                {
-                    _textView.Selection.Select(new VirtualSnapshotPoint(anchor.GetPoint(after)), new VirtualSnapshotPoint(active.GetPoint(after)));
-                    _textView.Caret.MoveTo(_textView.Selection.ActivePoint);
-                }
-
-                _textView.ViewScroller.EnsureSpanVisible(_textView.Selection.StreamSelectionSpan.SnapshotSpan, EnsureSpanVisibleOptions.ShowStart);
+                _operations.SelectAndMoveCaret(new VirtualSnapshotPoint(anchor.GetPoint(after)), 
+                                               new VirtualSnapshotPoint(active.GetPoint(after)), 
+                                               mode, 
+                                               EnsureSpanVisibleOptions.ShowStart);
 
                 _operations.AddAfterTextBufferChangePrimitive();
 

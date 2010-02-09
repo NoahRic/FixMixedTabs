@@ -29,11 +29,7 @@ namespace FixMixedTabs
             IWpfTextView view = textViewHost.TextView;
 
             ITextDocument document;
-#if PostBeta2
             if (!TextDocumentFactoryService.TryGetTextDocument(view.TextDataModel.DocumentBuffer, out document))
-                return null;
-#endif
-            if (!view.TextDataModel.DocumentBuffer.Properties.TryGetProperty(typeof(ITextDocument), out document))
                 return null;
 
             return new InformationBarMargin(view, document, OperationsFactory.GetEditorOperations(view), UndoHistoryRegistry.RegisterHistory(view.TextBuffer));

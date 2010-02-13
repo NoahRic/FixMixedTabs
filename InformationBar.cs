@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
-using System.Windows.Input;
-using Microsoft.VisualStudio.UI.Undo;
 
 namespace FixMixedTabs
 {
@@ -18,11 +15,11 @@ namespace FixMixedTabs
         private bool _isDisposed = false;
         private ITextDocument _document;
         private IEditorOperations _operations;
-        private UndoHistory _undoHistory;
+        private ITextUndoHistory _undoHistory;
 
         bool dontShowAgain = false;
 
-        public InformationBarMargin(IWpfTextView textView, ITextDocument document, IEditorOperations editorOperations, UndoHistory undoHistory)
+        public InformationBarMargin(IWpfTextView textView, ITextDocument document, IEditorOperations editorOperations, ITextUndoHistory undoHistory)
         {
             _textView = textView;
             _document = document;
@@ -179,7 +176,7 @@ namespace FixMixedTabs
             bool empty = _textView.Selection.IsEmpty;
             TextSelectionMode mode = _textView.Selection.Mode;
 
-            using (UndoTransaction undo = _undoHistory.CreateTransaction("Untabify"))
+            using (var undo = _undoHistory.CreateTransaction("Untabify"))
             {
                 _operations.AddBeforeTextBufferChangePrimitive();
 

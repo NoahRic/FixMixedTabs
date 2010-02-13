@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.Composition;
+using System.Diagnostics;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudio.UI.Undo;
 
 namespace FixMixedTabs
 {
@@ -22,7 +22,7 @@ namespace FixMixedTabs
         IEditorOperationsFactoryService OperationsFactory = null;
 
         [Import]
-        IUndoHistoryRegistry UndoHistoryRegistry = null;
+        ITextUndoHistoryRegistry UndoHistoryRegistry = null;
 
         public IWpfTextViewMargin CreateMargin(IWpfTextViewHost textViewHost, IWpfTextViewMargin containerMargin)
         {
@@ -32,7 +32,15 @@ namespace FixMixedTabs
             if (!TextDocumentFactoryService.TryGetTextDocument(view.TextDataModel.DocumentBuffer, out document))
                 return null;
 
-            return new InformationBarMargin(view, document, OperationsFactory.GetEditorOperations(view), UndoHistoryRegistry.RegisterHistory(view.TextBuffer));
+
+            ITextUndoHistory history;
+            if (!UndoHistoryRegistry.TryGetHistory(view.TextBuffer, out history))
+            {
+                Debug.Fail("Unexpected: couldn't get an undo history for the given text buffer");
+                return null;
+            }
+
+            return new InformationBarMargin(view, document, OperationsFactory.GetEditorOperations(view), history);
         }
     }
     #endregion

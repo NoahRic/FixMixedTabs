@@ -131,7 +131,7 @@ namespace FixMixedTabs
             }
             else
             {
-                DoubleAnimation animation = new DoubleAnimation(this.Height, newHeight, new Duration(TimeSpan.FromMilliseconds(350)));
+                DoubleAnimation animation = new DoubleAnimation(this.Height, newHeight, new Duration(TimeSpan.FromMilliseconds(175)));
                 Storyboard.SetTarget(animation, this);
                 Storyboard.SetTargetProperty(animation, new PropertyPath(StackPanel.HeightProperty));
 

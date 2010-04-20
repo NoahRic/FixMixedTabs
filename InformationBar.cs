@@ -49,6 +49,8 @@ namespace FixMixedTabs
 
             ITextSnapshot snapshot = _textView.TextDataModel.DocumentBuffer.CurrentSnapshot;
 
+            int tabSize = _textView.Options.GetOptionValue(DefaultOptions.TabSizeOptionId);
+
             bool startsWithSpaces = false;
             bool startsWithTabs = false;
 
@@ -60,7 +62,32 @@ namespace FixMixedTabs
                     if (firstChar == '\t')
                         startsWithTabs = true;
                     else if (firstChar == ' ')
-                        startsWithSpaces = true;
+                    {
+                        // We need to count to make sure there are enough spaces to go into a tab or a tab that follows the spaces
+                        int countOfSpaces = 1;
+                        for (int i = line.Start + 1; i < line.End; i++)
+                        {
+                            char ch = snapshot[i];
+                            if (ch == ' ')
+                            {
+                                countOfSpaces++;
+                                if (countOfSpaces >= tabSize)
+                                {
+                                    startsWithSpaces = true;
+                                    break;
+                                }
+                            }
+                            else if (ch == '\t')
+                            {
+                                startsWithSpaces = true;
+                                break;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                    }
 
                     if (startsWithSpaces && startsWithTabs)
                         break;
@@ -180,7 +207,11 @@ namespace FixMixedTabs
             {
                 _operations.AddBeforeTextBufferChangePrimitive();
 
-                action();
+                if (!action())
+                {
+                    undo.Cancel();
+                    return;
+                }
 
                 ITextSnapshot after = _textView.TextSnapshot;
 

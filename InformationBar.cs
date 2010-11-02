@@ -12,12 +12,13 @@ namespace FixMixedTabs
     {
         public const string MarginName = "InformationBar";
         private IWpfTextView _textView;
-        private bool _isDisposed = false;
         private ITextDocument _document;
         private IEditorOperations _operations;
         private ITextUndoHistory _undoHistory;
 
-        bool dontShowAgain = false;
+        private bool _isDisposed = false;
+
+        bool _dontShowAgain = false;
 
         public InformationBarMargin(IWpfTextView textView, ITextDocument document, IEditorOperations editorOperations, ITextUndoHistory undoHistory)
         {
@@ -37,14 +38,34 @@ namespace FixMixedTabs
             this.Name = MarginName;
 
             document.FileActionOccurred += FileActionOccurred;
+            textView.Closed += TextViewClosed;
 
             // Delay the initial check until the view gets focus
             textView.GotAggregateFocus += GotAggregateFocus;
         }
 
+        void DisableInformationBar()
+        {
+            _dontShowAgain = true;
+            this.CloseInformationBar();
+
+            if (_document != null)
+            {
+                _document.FileActionOccurred -= FileActionOccurred;
+                _document = null;
+            }
+
+            if (_textView != null)
+            {
+                _textView.GotAggregateFocus -= GotAggregateFocus;
+                _textView.Closed -= TextViewClosed;
+                _textView = null;
+            }
+        }
+
         void CheckTabsAndSpaces()
         {
-            if (dontShowAgain)
+            if (_dontShowAgain)
                 return;
 
             ITextSnapshot snapshot = _textView.TextDataModel.DocumentBuffer.CurrentSnapshot;
@@ -102,6 +123,9 @@ namespace FixMixedTabs
 
         void FileActionOccurred(object sender, TextDocumentFileActionEventArgs e)
         {
+            if (_dontShowAgain)
+                return;
+
             if ((e.FileActionType & FileActionTypes.ContentLoadedFromDisk) != 0 ||
                 (e.FileActionType & FileActionTypes.ContentSavedToDisk) != 0)
             {
@@ -116,6 +140,11 @@ namespace FixMixedTabs
             CheckTabsAndSpaces();
         }
 
+        void TextViewClosed(object sender, EventArgs e)
+        {
+            DisableInformationBar();
+        }
+
         #endregion
 
         #region Hiding and showing the information bar
@@ -127,13 +156,12 @@ namespace FixMixedTabs
 
         void DontShowAgain(object sender, RoutedEventArgs e)
         {
-            this.dontShowAgain = true;
-            this.CloseInformationBar();
+            this.DisableInformationBar();
         }
 
         void CloseInformationBar()
         {
-            if (this.Height == 0)
+            if (this.Height == 0 || _dontShowAgain)
                 return;
 
             // Since we're going to be closing, make sure focus is back in the editor
@@ -144,7 +172,7 @@ namespace FixMixedTabs
 
         void ShowInformationBar()
         {
-            if (this.Height > 0 || dontShowAgain)
+            if (this.Height > 0 || _dontShowAgain)
                 return;
 
             ChangeHeightTo(27);
@@ -152,6 +180,9 @@ namespace FixMixedTabs
 
         void ChangeHeightTo(double newHeight)
         {
+            if (_dontShowAgain)
+                return;
+
             if (_textView.Options.GetOptionValue(DefaultWpfViewOptions.EnableSimpleGraphicsId))
             {
                 this.Height = newHeight;
@@ -328,19 +359,12 @@ namespace FixMixedTabs
 
         #endregion
 
-        private void ThrowIfDisposed()
-        {
-            if (_isDisposed)
-                throw new ObjectDisposedException(MarginName);
-        }
-
         #region IWpfTextViewMargin Members
 
         public FrameworkElement VisualElement
         {
             get
             {
-                ThrowIfDisposed();
                 return this;
             }
         }
@@ -353,7 +377,6 @@ namespace FixMixedTabs
         {
             get
             {
-                ThrowIfDisposed();
                 return this.ActualHeight;
             }
         }
@@ -362,8 +385,7 @@ namespace FixMixedTabs
         {
             get
             {
-                ThrowIfDisposed();
-                return true;
+                return !_dontShowAgain;
             }
         }
 
@@ -374,7 +396,7 @@ namespace FixMixedTabs
 
         public void Dispose()
         {
-            // Nothing to do here.
+            this.DisableInformationBar();
         }
 
         #endregion

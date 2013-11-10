@@ -46,8 +46,8 @@ namespace FixMixedTabs
 
         void DisableInformationBar()
         {
-            _dontShowAgain = true;
             this.CloseInformationBar();
+            _dontShowAgain = true;
 
             if (_document != null)
             {

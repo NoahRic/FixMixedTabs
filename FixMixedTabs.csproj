@@ -12,6 +12,7 @@
     <RootNamespace>FixMixedTabs</RootNamespace>
     <AssemblyName>FixMixedTabs</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition="'$(VisualStudioVersion)' == '14.0'">v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <GeneratePkgDefFile>false</GeneratePkgDefFile>
   </PropertyGroup>
